@@ -3,6 +3,7 @@ package com.justapps.subscriptiontracker;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -11,30 +12,28 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.webkit.JavascriptInterface;
-import android.webkit.ValueCallback;
-import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
 /**
- * Subscription Tracker — a calm, offline shell.
+ * Subscription Tracker: a calm, offline shell.
  * All UI lives in assets/www/index.html; this class provides WebView hosting,
- * file picking for backup import, sharing for export, and real on-device
- * renewal reminders via AlarmManager.
+ * real on-device renewal reminders via AlarmManager, and the small native
+ * helpers the page needs to talk about notification permission honestly.
  */
 public class MainActivity extends Activity {
 
     static final String PREFS = "reminders";
     static final String SEP = "\u0001";
-    private static final int FILE_CHOOSER_REQUEST = 1001;
+    private static final String KEY_NOTIF_ASKED = "notif_permission_asked";
     private static final int NOTIFICATION_PERMISSION_REQUEST = 1002;
 
     private WebView webView;
-    private ValueCallback<Uri[]> filePathCallback;
     private volatile boolean overlayOpen = false;
 
     @Override
@@ -61,40 +60,19 @@ public class MainActivity extends Activity {
         settings.setTextZoom(100);
 
         webView.setWebViewClient(new WebViewClient());
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> callback,
-                                             FileChooserParams fileChooserParams) {
-                if (filePathCallback != null) filePathCallback.onReceiveValue(null);
-                filePathCallback = callback;
-                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("application/json");
-                try {
-                    startActivityForResult(intent, FILE_CHOOSER_REQUEST);
-                } catch (Exception e) {
-                    filePathCallback = null;
-                    return false;
-                }
-                return true;
-            }
-        });
         webView.addJavascriptInterface(new NativeBridge(), "NativeBridge");
         webView.loadUrl("file:///android_asset/www/index.html");
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == FILE_CHOOSER_REQUEST) {
-            Uri[] results = null;
-            if (resultCode == RESULT_OK && data != null && data.getData() != null) {
-                results = new Uri[]{data.getData()};
-            }
-            if (filePathCallback != null) {
-                filePathCallback.onReceiveValue(results);
-                filePathCallback = null;
-            }
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST && webView != null) {
+            boolean granted = grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            webView.evaluateJavascript(
+                    "window.onNotificationPermissionResult && window.onNotificationPermissionResult(" + granted + ")",
+                    null);
         }
     }
 
@@ -119,7 +97,29 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
-    /** Bridge exposed to the page as window.NativeBridge — every method is a no-op-safe native capability. */
+    /** Opens this app's notification settings page, with a safe fallback. UI thread only. */
+    private void openNotificationSettingsInternal() {
+        try {
+            Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+            intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+            startActivity(intent);
+        } catch (Exception e) {
+            openAppSettingsInternal();
+        }
+    }
+
+    /** Opens this app's general settings page. UI thread only. */
+    private void openAppSettingsInternal() {
+        try {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+            startActivity(intent);
+        } catch (Exception ignored) {
+            // Nowhere left to send the user; stay quiet.
+        }
+    }
+
+    /** Bridge exposed to the page as window.NativeBridge. */
     public class NativeBridge {
 
         @JavascriptInterface
@@ -143,23 +143,67 @@ public class MainActivity extends Activity {
             }
         }
 
+        /**
+         * Asks for the notification permission properly. When Android will no
+         * longer show the dialog (denied before), it opens the system settings
+         * page instead of silently doing nothing.
+         */
         @JavascriptInterface
         public void requestNotificationPermission() {
-            if (Build.VERSION.SDK_INT >= 33 &&
-                    checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                runOnUiThread(() -> requestPermissions(
-                        new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_REQUEST));
+            if (Build.VERSION.SDK_INT < 33) return; // no runtime permission before Android 13
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                    == PackageManager.PERMISSION_GRANTED) return;
+            runOnUiThread(() -> {
+                SharedPreferences prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+                boolean askedBefore = prefs.getBoolean(KEY_NOTIF_ASKED, false);
+                boolean dialogCanShow = !askedBefore
+                        || shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS);
+                if (dialogCanShow) {
+                    prefs.edit().putBoolean(KEY_NOTIF_ASKED, true).apply();
+                    requestPermissions(
+                            new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                            NOTIFICATION_PERMISSION_REQUEST);
+                } else {
+                    openNotificationSettingsInternal();
+                }
+            });
+        }
+
+        /** True only when a reminder can actually reach the user right now. */
+        @JavascriptInterface
+        public boolean notificationsEnabled() {
+            NotificationManager manager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (manager != null && !manager.areNotificationsEnabled()) return false;
+            if (Build.VERSION.SDK_INT >= 33) {
+                return checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                        == PackageManager.PERMISSION_GRANTED;
             }
+            return true;
+        }
+
+        /** True when reminders may fire at exactly 9 AM instead of an inexact window. */
+        @JavascriptInterface
+        public boolean exactAlarmsAllowed() {
+            return ReminderReceiver.canScheduleExact(MainActivity.this);
         }
 
         @JavascriptInterface
-        public void shareData(String text) {
+        public void openNotificationSettings() {
+            runOnUiThread(() -> openNotificationSettingsInternal());
+        }
+
+        @JavascriptInterface
+        public void openExactAlarmSettings() {
+            if (Build.VERSION.SDK_INT < 31) return;
             runOnUiThread(() -> {
-                Intent intent = new Intent(Intent.ACTION_SEND);
-                intent.setType("application/json");
-                intent.putExtra(Intent.EXTRA_SUBJECT, "Subscription Tracker backup");
-                intent.putExtra(Intent.EXTRA_TEXT, text == null ? "{}" : text);
-                startActivity(Intent.createChooser(intent, "Save your backup"));
+                try {
+                    Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                    intent.setData(Uri.parse("package:" + getPackageName()));
+                    startActivity(intent);
+                } catch (Exception e) {
+                    openAppSettingsInternal();
+                }
             });
         }
 

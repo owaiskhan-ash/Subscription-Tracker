@@ -7,11 +7,14 @@ import android.content.SharedPreferences;
 
 import java.util.Map;
 
-/** After a reboot, quietly re-arm every reminder that is still in the future. */
+/** After a reboot or an app update, quietly re-arm every reminder still in the future. */
 public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (intent == null || !Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) return;
+        if (intent == null) return;
+        String action = intent.getAction();
+        if (!Intent.ACTION_BOOT_COMPLETED.equals(action)
+                && !Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)) return;
         SharedPreferences prefs = context.getSharedPreferences(MainActivity.PREFS, Context.MODE_PRIVATE);
         long now = System.currentTimeMillis();
         SharedPreferences.Editor editor = prefs.edit();
@@ -28,7 +31,7 @@ public class BootReceiver extends BroadcastReceiver {
                     editor.remove(entry.getKey());
                 }
             } catch (NumberFormatException ignored) {
-                // Corrupt entry — skip it and keep the rest working.
+                // Corrupt entry: skip it and keep the rest working.
             }
         }
         editor.apply();

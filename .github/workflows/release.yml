@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build:
-    name: Build release APK (v1.0.0)
+    name: Build release APK (v1.1.0)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -45,14 +45,14 @@ jobs:
       - name: Name the APK
         run: |
           mkdir -p ../dist
-          cp app/build/outputs/apk/release/app-release.apk ../dist/subscription-tracker-v1.0.0.apk
+          cp app/build/outputs/apk/release/app-release.apk ../dist/subscription-tracker-v1.1.0.apk
           ls -la ../dist
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: subscription-tracker-v1.0.0
-          path: dist/subscription-tracker-v1.0.0.apk
+          name: subscription-tracker-v1.1.0
+          path: dist/subscription-tracker-v1.1.0.apk
           if-no-files-found: error
 
       - name: Publish GitHub Release
@@ -61,11 +61,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cd ..
-          if gh release view v1.0.0 > /dev/null 2>&1; then
-            gh release upload v1.0.0 dist/subscription-tracker-v1.0.0.apk --clobber
+          if gh release view v1.1.0 > /dev/null 2>&1; then
+            gh release upload v1.1.0 dist/subscription-tracker-v1.1.0.apk --clobber
           else
-            gh release create v1.0.0 dist/subscription-tracker-v1.0.0.apk \
+            gh release create v1.1.0 dist/subscription-tracker-v1.1.0.apk \
               --target "$GITHUB_SHA" \
-              --title "Subscription Tracker v1.0.0" \
-              --notes "First release. A calm, clutter-free place for every recurring expense — add subscriptions and regular bills, see what each month really costs, and get one gentle reminder before anything renews. Download subscription-tracker-v1.0.0.apk and install it on Android 8.0 or newer. Everything stays on your phone: no account, no tracking."
+              --title "Subscription Tracker v1.1.0" \
+              --notes "Subscription Tracker v1.1.0. Reminders are fixed and made reliable: Settings now shows your real notification status and takes you to the right system setting when notifications are off, each reminder is scheduled for exactly 9 AM, and reminders re-arm themselves after a restart or an app update. The bottom bar is evenly aligned, the app has its new charcoal ST icon, and Settings is simpler now that backup export/import and the About section are gone. All data stays saved on your phone only. Download subscription-tracker-v1.1.0.apk and install it on Android 8.0 or newer."
           fi
