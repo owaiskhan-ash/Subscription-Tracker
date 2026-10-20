@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Calm clock mark, matching the in-app header: a thin cream ring and two quiet hands. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M54,22 a32,32 0 1,0 0.01,0 Z M54,30 a24,24 0 1,1 -0.01,0 Z"
+        android:fillColor="#F3F0E9"
+        android:fillType="evenOdd" />
+    <path
+        android:pathData="M52,38 h4 v18 h-4 Z M54,52 l14,8 -2,3.4 -14,-8 Z"
+        android:fillColor="#F3F0E9" />
+</vector>

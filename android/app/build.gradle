@@ -1,0 +1,48 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.justapps.subscriptiontracker'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.justapps.subscriptiontracker'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '1.0.0'
+    }
+
+    signingConfigs {
+        release {
+            def storeFilePath = System.getenv('RELEASE_STORE_FILE')
+            if (storeFilePath) {
+                storeFile file(storeFilePath)
+                storePassword System.getenv('RELEASE_STORE_PASSWORD')
+                keyAlias System.getenv('RELEASE_KEY_ALIAS')
+                keyPassword System.getenv('RELEASE_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // Signed with a real keystore when CI/local env provides one,
+            // otherwise with the debug key so the v1 APK is always installable.
+            signingConfig System.getenv('RELEASE_STORE_FILE') ? signingConfigs.release : signingConfigs.debug
+        }
+        debug {
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

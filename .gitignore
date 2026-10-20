@@ -1,0 +1,17 @@
+# Android / Gradle
+.gradle/
+**/build/
+local.properties
+*.iml
+.idea/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Release artefacts (the APK is distributed via GitHub Releases)
+dist/
+*.apk
+!gradle/wrapper/gradle-wrapper.jar
+
+# OS
+.DS_Store
