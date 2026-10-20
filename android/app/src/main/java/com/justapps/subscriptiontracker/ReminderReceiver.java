@@ -37,15 +37,28 @@ public class ReminderReceiver extends BroadcastReceiver {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
+    /** True when Android lets this app fire alarms at an exact time. */
+    static boolean canScheduleExact(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true;
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        return alarmManager != null && alarmManager.canScheduleExactAlarms();
+    }
+
     static void schedule(Context context, int requestCode, String title, String body, long whenMillis) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (alarmManager == null) return;
         PendingIntent intent = pendingIntent(context, requestCode, title, body);
         if (whenMillis <= System.currentTimeMillis()) return; // never schedule in the past
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        try {
+            if (canScheduleExact(context)) {
+                // Exact, so the reminder lands at 9 AM as promised, doze or not.
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, whenMillis, intent);
+            } else {
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, whenMillis, intent);
+            }
+        } catch (SecurityException e) {
+            // Exact access was revoked between the check and the call: fall back quietly.
             alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, whenMillis, intent);
-        } else {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, whenMillis, intent);
         }
     }
 
@@ -74,7 +87,7 @@ public class ReminderReceiver extends BroadcastReceiver {
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager != null) manager.notify(requestCode, notification);
 
-        // The reminder served its purpose — forget it so it never repeats.
+        // The reminder served its purpose, so forget it and it never repeats.
         context.getSharedPreferences(MainActivity.PREFS, Context.MODE_PRIVATE)
                 .edit().remove(String.valueOf(requestCode)).apply();
     }
