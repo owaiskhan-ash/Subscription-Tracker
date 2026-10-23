@@ -13,5 +13,8 @@ dist/
 *.apk
 !gradle/wrapper/gradle-wrapper.jar
 
+# Design concept scratch images
+design-concepts/
+
 # OS
 .DS_Store
