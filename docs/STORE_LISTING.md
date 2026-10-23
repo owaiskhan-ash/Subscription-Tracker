@@ -29,6 +29,10 @@ Subscription Tracker is for anyone who has ever opened a bank statement and wond
 
 Every subscription, one calm list: monthly totals and gentle reminders.
 
+## Release notes: v1.2.0
+
+Refreshed with the quiet tactile JUST APPS design system and new handcrafted leather-and-suede ST. icon. Cards across Today, All, and Settings are finished in hushed deep petrol, muted sea-teal, camel-sand, moss-olive, and cognac brushed suede with delicate saddle stitching, paired with smooth matte header and bottom dock bars. All existing subscriptions and 9 AM reminders stay privately stored on your phone.
+
 ## Release notes: v1.1.0
 
 Reminders now work the way they should. Settings shows your real notification status and takes you to the right system setting when notifications are off, each reminder is scheduled for exactly 9 AM, and reminders re-arm themselves after a restart or an app update. The bottom bar is evenly aligned, the app has a new charcoal ST icon, and Settings is simpler now that backup export/import and the About section are gone. All of your data stays saved on this phone only.

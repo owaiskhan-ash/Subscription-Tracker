@@ -5,14 +5,14 @@
 Subscription Tracker helps you keep all your recurring expenses in one simple place. Add subscriptions and regular bills like Netflix, Amazon Prime, Spotify, Wi-Fi and broadband, mobile plans, cloud storage, apps, gyms and memberships, and enter their cost, billing frequency, and next renewal date. The app quietly shows how much you are really spending each month and over a year, helps you see exactly where your money is going, and reminds you gently before each payment is due, so you can keep, pause, cancel, or adjust anything you no longer need, while there is still time. Everything lives only on your phone: no account, no sign-in, no tracking.
 
 <p>
-  <a href="https://github.com/owaiskhan-ash/Subscription-Tracker/releases/tag/v1.1.0"><b>⬇ Download v1.1.0 APK</b></a>
+  <a href="https://github.com/owaiskhan-ash/Subscription-Tracker/releases/tag/v1.2.0"><b>⬇ Download v1.2.0 APK</b></a>
 </p>
 
 ## Design
 
-Modelled on the supplied reference (Screen Time Reminder): deep black `#0B0B0B`, a single cream card `#F3F0E9`, thin oversized numbers, small uppercase labels, hairline dividers, and a quiet three-tab bar, **Today · All · Settings**, with a single calm `＋` to add. Nothing else asks for your attention.
+Crafted in the **JUST APPS** tactile material palette: a quiet charcoal wool-felt backdrop (`#0D1010`), hushed brushed-suede and pressed-felt cards drawn directly from the handcrafted `ST.` leather-and-suede icon (`#203836` deep petrol, `#1F3D3E` muted sea-teal, `#382E21` warm camel-sand, `#302F1D` moss-olive, `#3C2218` espresso-cognac), delicate perimeter saddle stitching, editorial serif display numbers, and smooth matte header and bottom dock bars (**Today · All · Settings**) with a single calm `＋` to add.
 
-## Features (v1.1.0)
+## Features (v1.2.0)
 
 - **Today**: this month's true total (weekly / quarterly / yearly costs all normalised), next renewal with a live "due in" count, an optional monthly-budget bar, and a six-month rhythm chart of what is set to renew.
 - **All**: every subscription in date order, with search, Active / Due soon / Paused filters, and monthly + yearly totals.
@@ -24,7 +24,7 @@ Modelled on the supplied reference (Screen Time Reminder): deep black `#0B0B0B`,
 
 ## Get the app
 
-Download **`subscription-tracker-v1.1.0.apk`** from [Release v1.1.0](https://github.com/owaiskhan-ash/Subscription-Tracker/releases/tag/v1.1.0) and install it on any phone running **Android 8.0 (API 26) or newer**. Allow notifications on first use so renewal reminders can reach you.
+Download **`subscription-tracker-v1.2.0.apk`** from [Release v1.2.0](https://github.com/owaiskhan-ash/Subscription-Tracker/releases/tag/v1.2.0) and install it on any phone running **Android 8.0 (API 26) or newer**. Allow notifications on first use so renewal reminders can reach you.
 
 > The APK is signed with a debug key so it installs directly (sideload). To publish on Google Play, generate your own keystore and build with `RELEASE_STORE_FILE`, `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD` set; the build picks it up automatically.
 
@@ -51,10 +51,11 @@ Releases are built by [`.github/workflows/release.yml`](.github/workflows/releas
 ```
 android/
   app/src/main/assets/www/index.html   ← the whole calm UI (HTML/CSS/JS, no dependencies)
+  app/src/main/assets/www/tex/         ← tactile suede, felt & ST. icon assets
   app/src/main/java/.../               ← WebView shell + AlarmManager reminders (Java, no dependencies)
-  app/build.gradle                     ← versionCode 2 · versionName 1.1.0 · minSdk 26 · targetSdk 34
-.github/workflows/release.yml          ← builds & publishes the v1.1.0 APK
+  app/build.gradle                     ← versionCode 3 · versionName 1.2.0 · minSdk 26 · targetSdk 34
+.github/workflows/release.yml          ← builds & publishes the v1.2.0 APK
 docs/STORE_LISTING.md                  ← full-length store description & release notes
 ```
 
-Version 1.1.0 · Made to be looked at for a moment, then put down.
+Version 1.2.0 · Made to be looked at for a moment, then put down.

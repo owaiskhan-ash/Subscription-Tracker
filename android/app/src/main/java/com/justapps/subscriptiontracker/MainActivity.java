@@ -47,8 +47,8 @@ public class MainActivity extends Activity {
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         setContentView(root);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-        getWindow().setStatusBarColor(0xFF0B0B0B);
-        getWindow().setNavigationBarColor(0xFF0B0B0B);
+        getWindow().setStatusBarColor(0xFF131616);
+        getWindow().setNavigationBarColor(0xFF131616);
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
